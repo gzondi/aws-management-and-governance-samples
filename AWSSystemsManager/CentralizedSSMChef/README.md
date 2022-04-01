@@ -54,7 +54,7 @@ In this section, we take a closer look at the following concepts of AWS Systems 
 
 # Architecture Diagram
 
-![](images/opsmgmt-diagram.png)
+![](images/opsmgmt-chef-diagram.png)
 
 ## Resulting Environment
 

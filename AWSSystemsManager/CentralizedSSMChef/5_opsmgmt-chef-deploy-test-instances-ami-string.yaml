@@ -44,14 +44,14 @@ Parameters :
     Type : 'String'
     Description : "(Optional) The name of the IAM Instance Profile that grants permissions to AWS Systems Manager."
     Default: ''
-  LatestWindowsAmiId :
+  LatestWindowsAmiIdString :
     # Use public Systems Manager Parameter
-    Type : 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
-    Default: '/aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base'
-  LatestAmazonLinuxAmiId :
+    Type : String
+    Default: 'ami-096dfbcf0a19c29cc'
+  LatestAmazonLinuxAmiIdString :
     # Use public Systems Manager Parameter
-    Type : 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
-    Default: '/aws/service/ami-amazon-linux-latest/amzn-ami-hvm-x86_64-gp2'
+    Type : String
+    Default: 'ami-01ea86ba186b28b5b'
 
 Conditions:
   CreateManagedInstanceProfileCondition:
@@ -228,7 +228,7 @@ Resources:
   LinuxEc2Instance: 
     Type: AWS::EC2::Instance
     Properties: 
-      InstanceType: t2.small
+      InstanceType: t3.small
       ImageId: !Ref LatestAmazonLinuxAmiId
       NetworkInterfaces: 
         - AssociatePublicIpAddress: "true"
@@ -245,14 +245,14 @@ Resources:
       Tags:
         - Key: Name
           Value: AmazonLinux
-        - Key: Patch
+        - Key: Chef
           Value: 'True'
-        - Key: 'Patch Group'
+        - Key: 'Chef Group'
           Value: 'CustomAmazonLinux'
   WindowsEc2Instance: 
     Type: AWS::EC2::Instance
     Properties: 
-      InstanceType: t2.small
+      InstanceType: t3.small
       ImageId: !Ref LatestWindowsAmiId
       NetworkInterfaces: 
         - AssociatePublicIpAddress: "true"
@@ -269,7 +269,7 @@ Resources:
       Tags:
         - Key: Name
           Value: Windows
-        - Key: Patch
+        - Key: Chef
           Value: 'True'
-        - Key: 'Patch Group'
+        - Key: 'Chef Group'
           Value: 'CustomWindows'

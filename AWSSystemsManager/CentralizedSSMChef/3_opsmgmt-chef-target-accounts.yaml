@@ -25,7 +25,7 @@
 #------------------------------------------------------------------------------
 
 AWSTemplateFormatVersion: '2010-09-09'
-Description: AWS CloudFormation template to configure a target account for a scheduled multi-account and multi-region Automation Chef execution.
+Description: AWS CloudFormation template to configure a target account for a scheduled multi-account and multi-region Automation for Chef cookbook or recipe execution.
 
 #-----------------------------------------------------------
 # Parameters
@@ -40,10 +40,14 @@ Parameters :
     Type : 'String'
     Description: 'Name of the S3 bucket that lives in the central account.'
     Default: ''
-  ExecutionLogsS3BucketPrefix :
+  InventoryExecutionLogsS3BucketPrefix :
     Type : 'String'
     Description: 'Name of the prefix to use in the central account S3 bucket for inventory execution data.'
     Default: 'inventory-execution-logs'
+  RunInspecExecutionLogsS3BucketPrefix :
+    Type : 'String'
+    Description: 'Name of the prefix to use in the central account S3 bucket for RunInspec execution data.'
+    Default: 'runinspec-execution-logs'
   ExistingAutomationExecutionRole :
     Type : 'String'
     Description: '(Optional) The IAM role ARN of an Automation Execution role which has permissions to invoke patching Automation workflows and has a trust relationship with the central account.'
@@ -133,7 +137,7 @@ Resources:
       OutputLocation:
         S3Location: 
           OutputS3BucketName: !Ref ExecutionLogsS3Bucket
-          OutputS3KeyPrefix: !Join [ '', [!Ref ExecutionLogsS3BucketPrefix, '/', 'accountid=', !Ref 'AWS::AccountId', '/', 'region=', !Ref 'AWS::Region'] ]
+          OutputS3KeyPrefix: !Join [ '', [!Ref InventoryExecutionLogsS3BucketPrefix, '/', 'accountid=', !Ref 'AWS::AccountId', '/', 'region=', !Ref 'AWS::Region'] ]
       Targets:
       - Key: InstanceIds
         Values:
@@ -161,7 +165,30 @@ Resources:
           - "Enabled"
         billingInfo: 
           - "Enabled"
-          
+
+  #-------------------------------------------------
+  # State Manager Association to gather Inventory data using AWS-RunInspecChecks
+  #-------------------------------------------------
+  ChefRunInspecAssociation:
+    Type: AWS::SSM::Association
+    Properties:
+      AssociationName: RunInspecChecks-Association
+      Name: AWS-RunInspecChecks
+      ScheduleExpression: "rate(1 day)"
+      OutputLocation:
+        S3Location: 
+          OutputS3BucketName: !Ref ExecutionLogsS3Bucket
+          OutputS3KeyPrefix: !Join [ '', [!Ref RunInspecExecutionLogsS3BucketPrefix, '/', 'accountid=', !Ref 'AWS::AccountId', '/', 'region=', !Ref 'AWS::Region'] ]
+      Targets:
+      - Key: InstanceIds
+        Values:
+        - "*"
+      Parameters: 
+        sourceType: 
+          - 'GitHub'
+        sourceInfo: 
+          - '{"owner":"awslabs","repository":"amazon-ssm","path":"Compliance/InSpec/PortCheck","getOptions":"branch:master"}'
+        
   #-------------------------------------------------
   # Resource Data Sync to aggregate inventory, patching, and compliance data in the central S3 bucket
   #-------------------------------------------------
