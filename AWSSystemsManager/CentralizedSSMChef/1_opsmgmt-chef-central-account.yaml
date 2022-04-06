@@ -19,13 +19,13 @@
 #------------------------------------------------------------------------------
 #
 # Template: 1_opsmgmt-chef-central-account.yaml
-# Purpose:  Configures the Systems Manager central account for the Chef SSM Document AWS-ApplyChefRecipes
+# Purpose:  AWS CloudFormation template to create a scheduled multi-account and multi-region SSM Automation for SSM with Chef using SSM Document AWS-ApplyChefRecipes.
 #
 #
 #------------------------------------------------------------------------------
 
 AWSTemplateFormatVersion: '2010-09-09'
-Description: AWS CloudFormation template to create a scheduled multi-account and multi-region Automation for SSM Run Command with Chef SSM Document AWS-ApplyChefRecipes.
+Description: AWS CloudFormation template to create a scheduled multi-account and multi-region SSM Automation for SSM with Chef using SSM Document AWS-ApplyChefRecipes.
 
 Metadata:
   AWS::CloudFormation::Interface:
@@ -585,19 +585,19 @@ Resources:
   # Create Athena named queries.
   #-----------------------------------------------------------
 
-  AthenaQueryNonCompliantPatch:
+  AthenaQueryNonCompliantChef:
     Type: AWS::Athena::NamedQuery
     Properties: 
       Database: !Join [ '-', [!Ref ResouceSyncBucket, 'database'] ]
-      Description: Example query to list managed instances that are non-compliant for patching.
-      Name: QueryNonCompliantPatch
+      Description: Example query to list managed instances that are non-compliant for Chef configuration.
+      Name: QueryNonCompliantChef
       QueryString: |
         SELECT 
           * 
         FROM 
           aws_complianceitem 
         WHERE 
-          status='NON_COMPLIANT' AND compliancetype='Patch' 
+          status='NON_COMPLIANT' AND compliancetype='Custom:InSpec' 
         LIMIT 20
   AthenaQuerySSMAgent:
     Type: AWS::Athena::NamedQuery

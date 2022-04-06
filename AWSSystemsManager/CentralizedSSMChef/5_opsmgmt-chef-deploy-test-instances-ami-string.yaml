@@ -18,14 +18,14 @@
 
 #------------------------------------------------------------------------------
 #
-# Template: opsmgmt-deploy-test-instances.yaml
-# Purpose:  CloudFormation template to deploy test instances for patching using multi-account/multi-Region Automation
+# Template: 5_opsmgmt-chef-deploy-test-instances-ami-string.yaml
+# Purpose:  AWS CloudFormation template to launch instances for Chef recipe execution demo environment for AWS Systems Manager.
 #
 #
 #------------------------------------------------------------------------------
 
 AWSTemplateFormatVersion: '2010-09-09'
-Description: AWS CloudFormation template to launch instances for Inventory, Patching, and Compliance demo environment for AWS Systems Manager
+Description: AWS CloudFormation template to launch instances for Chef recipe execution demo environment for AWS Systems Manager.
 
 #-----------------------------------------------------------
 # Parameters
@@ -44,11 +44,11 @@ Parameters :
     Type : 'String'
     Description : "(Optional) The name of the IAM Instance Profile that grants permissions to AWS Systems Manager."
     Default: ''
-  LatestWindowsAmiIdString :
+  LatestWindowsAmiId :
     # Use public Systems Manager Parameter
     Type : String
     Default: 'ami-096dfbcf0a19c29cc'
-  LatestAmazonLinuxAmiIdString :
+  LatestAmazonLinuxAmiId :
     # Use public Systems Manager Parameter
     Type : String
     Default: 'ami-01ea86ba186b28b5b'
@@ -76,7 +76,7 @@ Resources:
            - "AWS::AllSupported"
           TagFilters:
             -
-              Key: "Patch"
+              Key: "Chef"
               Values: 
                 - "True"
 
@@ -210,7 +210,7 @@ Resources:
   InstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: "Security Group for Automation patching test instances"
+      GroupDescription: "Security Group for Automation Chef recipe test instances"
       GroupName: Automation-CF
       SecurityGroupEgress: 
         - IpProtocol: -1

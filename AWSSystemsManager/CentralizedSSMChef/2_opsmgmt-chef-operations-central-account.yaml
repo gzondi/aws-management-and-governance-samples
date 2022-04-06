@@ -18,14 +18,14 @@
 
 #------------------------------------------------------------------------------
 #
-# Template: opsmgmt-operations-central-account.yaml
-# Purpose:  Configures the patching operation in the Systems Manager central account
+# Template: 2_opsmgmt-chef-operations-central-account.yaml
+# Purpose:  AWS CloudFormation template to create a scheduled multi-account and multi-region SSM Automation with Lambda and AWS-ApplyChefRecipes SMM document.
 #
 #
 #------------------------------------------------------------------------------
 
 AWSTemplateFormatVersion: '2010-09-09'
-Description: AWS CloudFormation template to create a scheduled multi-account and multi-region Automation with Lambda and AWS-ApplyChefRecipes SMM document.
+Description: AWS CloudFormation template to create a scheduled multi-account and multi-region SSM Automation with Lambda and AWS-ApplyChefRecipes SMM document.
 
 #-----------------------------------------------------------
 # Parameters
@@ -188,7 +188,7 @@ Resources:
           Fn::GetAtt:
           - MultiAccountChefLambdaFunction
           - Arn
-        Id: MultiAccountChefFunction
+        Id: MultiAccountChefFunction-NodeJS
   PermissionForEventsToInvokeLambda:
     Type: AWS::Lambda::Permission
     Properties:
@@ -240,7 +240,7 @@ Resources:
             - logs:CreateLogStream
             - logs:PutLogEvents
             Resource:
-              Fn::Sub: arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/MultiAccountChefFunction:*
+              Fn::Sub: arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/MultiAccountChefFunction-NodeJS:*
             Effect: Allow
   MultiAccountChefLambdaFunction:
     Type: AWS::Lambda::Function
@@ -407,7 +407,7 @@ Resources:
             MasterAccountID: !Sub ${AWS::AccountId}
             
             AutomationDocumentMamrAWSApplyChefRecipes: !Ref AutomationDocumentMamrAWSApplyChefRecipes
-      FunctionName: MultiAccountChefFunction
+      FunctionName: MultiAccountChefFunction-NodeJS
       Handler: index.handler
       Role: !GetAtt ChefAWSLambdaSSMMultiAccountRole.Arn 
       Runtime: python3.7

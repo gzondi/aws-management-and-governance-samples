@@ -18,14 +18,14 @@
 
 #------------------------------------------------------------------------------
 #
-# Template: opsmgmt-target-account.yaml
-# Purpose:  Configures the target accounts for multi-account/multi-region Automation using Patch Manager
+# Template: 3_opsmgmt-chef-target-accounts.yaml
+# Purpose:  AWS CloudFormation template to configure a target account for a scheduled multi-account and multi-region Automation for Chef recipe execution.
 #
 #
 #------------------------------------------------------------------------------
 
 AWSTemplateFormatVersion: '2010-09-09'
-Description: AWS CloudFormation template to configure a target account for a scheduled multi-account and multi-region Automation for Chef cookbook or recipe execution.
+Description: AWS CloudFormation template to configure a target account for a scheduled multi-account and multi-region Automation for Chef recipe execution.
 
 #-----------------------------------------------------------
 # Parameters
