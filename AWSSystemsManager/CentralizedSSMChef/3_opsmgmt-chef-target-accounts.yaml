@@ -77,7 +77,7 @@ Parameters :
       {"owner":"awslabs","repository":"amazon-ssm","path":"Compliance/InSpec/PortCheck","getOptions":"branch:master","tokenInfo": "{{ssm-secure:mySecureStringParameter}}"}.
   ChefRunList:
     Type: String
-    Default: recipe[ntp::default]
+    Default: ''
     Description: >-
       (Required) The Chef recipes to apply. For example,
       recipe[cookbook_name1::recipe_name],recipe[cookbook_name2::recipe_name]
@@ -147,6 +147,27 @@ Parameters :
 ###### End of Chef parameters
 
 ###### Chef RunInspec parameters
+  RunInspecSourceType:
+    Type: String
+    Default: S3
+    AllowedValues:
+      - GitHub
+      - S3
+    Description: >-
+      (Required) The source repository type for your Chef cookbooks.
+  RunInpecSourceInfo:
+    Type: String
+    Default: '{"path":"https://aws-applychefrecipes-examples.s3.amazonaws.com/apply-chef-recipes-example-cookbook.tar.gz"}'
+    Description: >-
+      (Required) Information about the source repository, such as repository
+      name, owner, branch if on GitHub, or path if Amazon S3. 
+      If source type is GitHub, you can specify any of the following: 
+      'owner', 'repository','path', 'getOptions', 'tokenInfo'. 
+      If source type is S3, you can specify 'path'. 
+      Example S3 parameters:
+      {"path":"https://chef-repo-eu-west-1-123456789012.s3.eu-west-1.amazonaws.com/ntp-3.12.0.tar.gz"}
+      Example GitHub parameters (sample includes GitHub token passed in as SSM Parameter, replace with your own SSM Paramter when using a private repo):
+      {"owner":"awslabs","repository":"amazon-ssm","path":"Compliance/InSpec/PortCheck","getOptions":"branch:master","tokenInfo": "{{ssm-secure:mySecureStringParameter}}"}.
 
 
   ExistingAutomationExecutionRole :
@@ -286,9 +307,9 @@ Resources:
         - "*"
       Parameters: 
         sourceType: 
-          - 'GitHub'
+          - !Ref RunInspecSourceType
         sourceInfo: 
-          - '{"owner":"awslabs","repository":"amazon-ssm","path":"Compliance/InSpec/PortCheck","getOptions":"branch:master"}'
+          - !Ref RunInpecSourceInfo
 
   #-------------------------------------------------
   # State Manager Association to gather Inventory data using AWS-AWSApplyChefRecipes
