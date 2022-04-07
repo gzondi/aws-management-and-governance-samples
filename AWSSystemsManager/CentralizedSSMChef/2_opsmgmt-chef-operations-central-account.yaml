@@ -56,10 +56,17 @@ Parameters :
       The number of errors that are allowed before the system stops initiating the automation on additional targets. You can specify either an absolute number of errors, for example 10, or a percentage of the target set, for example 10%. The default value is 10%.
   ResourceGroupName:
     Type: String
+    Default: WebServers
     Description: >-
       Enter a resource group that includes the resources you want to target. Important: The Resource Group name is case sensitive.
-    Default: WebServers
+    
   ############# Parameters for SSM AWS-ApplyChefRecipes Document
+  ChefLambdaFunctionName:
+    Type: String
+    Default: MultiAccountChefFunction-
+    Description: >-
+      Enter the name of the lambda function which will automate the Chef recipe on target accounts and instances. 
+      Use a name to match the name of the Chef recipe.
   ChefRepoType:
     Type: String
     Default: S3
@@ -188,7 +195,7 @@ Resources:
           Fn::GetAtt:
           - MultiAccountChefLambdaFunction
           - Arn
-        Id: MultiAccountChefFunction-NodeJS
+        Id: !Ref ChefLambdaFunctionName
   PermissionForEventsToInvokeLambda:
     Type: AWS::Lambda::Permission
     Properties:
@@ -240,7 +247,7 @@ Resources:
             - logs:CreateLogStream
             - logs:PutLogEvents
             Resource:
-              Fn::Sub: arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/MultiAccountChefFunction-NodeJS:*
+              Fn::Sub: arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ChefLambdaFunctionName}:*
             Effect: Allow
   MultiAccountChefLambdaFunction:
     Type: AWS::Lambda::Function
@@ -407,7 +414,7 @@ Resources:
             MasterAccountID: !Sub ${AWS::AccountId}
             
             AutomationDocumentMamrAWSApplyChefRecipes: !Ref AutomationDocumentMamrAWSApplyChefRecipes
-      FunctionName: MultiAccountChefFunction-NodeJS
+      FunctionName: !Ref ChefLambdaFunctionName
       Handler: index.handler
       Role: !GetAtt ChefAWSLambdaSSMMultiAccountRole.Arn 
       Runtime: python3.7
