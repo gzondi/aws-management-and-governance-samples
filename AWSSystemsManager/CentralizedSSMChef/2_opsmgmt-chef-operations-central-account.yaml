@@ -187,7 +187,7 @@ Resources:
     Type: AWS::Events::Rule
     Properties:
       Description: Cloudwatch Schedule Event Rule Created for Scheduled SSM MultiAccount Chef recipe execution using lambda
-      Name: Schedule-Trigger-for-Lambda-MultiAccountChef-${ChefLambdaFunctionName}
+      Name: Schedule-Trigger-for-Lambda-${ChefLambdaFunctionName}
       ScheduleExpression:
         Ref: CloudWatchEventRuleSchedule
       State: ENABLED
@@ -215,7 +215,7 @@ Resources:
   ChefAWSLambdaSSMMultiAccountRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub ChefAWS-Lambda-SSM-MultiAccountRole-${ChefLambdaFunctionName}
+      RoleName: !Sub Lambda-SSM-MultiAccountRole-${ChefLambdaFunctionName}
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
