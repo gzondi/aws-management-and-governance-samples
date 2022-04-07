@@ -48,6 +48,107 @@ Parameters :
     Type : 'String'
     Description: 'Name of the prefix to use in the central account S3 bucket for RunInspec execution data.'
     Default: 'runinspec-execution-logs'
+  ChefRecipeAssocExecutionLogsS3BucketPrefix :
+    Type : 'String'
+    Description: 'Name of the prefix to use in the central account S3 bucket for RunInspec execution data.'
+    Default: 'runinspec-execution-logs'
+
+  ############# Parameters for SSM AWS-ApplyChefRecipes Document required for State Manager Association
+  ChefSourceType:
+    Type: String
+    Default: S3
+    AllowedValues:
+      - GitHub
+      - S3
+    Description: >-
+      (Required) The source repository type for your Chef cookbooks.
+  ChefSourceInfo:
+    Type: String
+    Default: '{"path":"https://aws-applychefrecipes-examples.s3.amazonaws.com/apply-chef-recipes-example-cookbook.tar.gz"}'
+    Description: >-
+      (Required) Information about the source repository, such as repository
+      name, owner, branch if on GitHub, or path if Amazon S3. 
+      If source type is GitHub, you can specify any of the following: 
+      'owner', 'repository','path', 'getOptions', 'tokenInfo'. 
+      If source type is S3, you can specify 'path'. 
+      Example S3 parameters:
+      {"path":"https://chef-repo-eu-west-1-123456789012.s3.eu-west-1.amazonaws.com/ntp-3.12.0.tar.gz"}
+      Example GitHub parameters (sample includes GitHub token passed in as SSM Parameter, replace with your own SSM Paramter when using a private repo):
+      {"owner":"awslabs","repository":"amazon-ssm","path":"Compliance/InSpec/PortCheck","getOptions":"branch:master","tokenInfo": "{{ssm-secure:mySecureStringParameter}}"}.
+  ChefRunList:
+    Type: String
+    Default: recipe[ntp::default]
+    Description: >-
+      (Required) The Chef recipes to apply. For example,
+      recipe[cookbook_name1::recipe_name],recipe[cookbook_name2::recipe_name]
+  ChefJSONAttributes:
+    Type: String
+    Default: " "
+    Description: >-
+      (Optional) Attributes JSON to pass to the Chef client that applies your
+      recipes.
+  ChefClientVer:
+    Type: String
+    Default: '14'
+    AllowedValues:
+      - None
+      - '11'
+      - '12'
+      - '13'
+      - '14'
+    Description: >-
+      (Optional) The Chef client version to install on instances before recipes
+      are applied. If None is specified, Systems Manager does not install the
+      Chef client before applying your recipes.
+  ChefClientArgs:
+    Type: String
+    Default: " "
+    AllowedPattern: '^[^''";&\|><\*\?`\$\(\)\{\}\[\]!#\\]*$'
+    Description: >-
+      (Optional) Extra arguments to be passed to the Chef client that applies
+      your recipes. For more information about available arguments, run
+      chef-client -h from an instance that has the Chef client installed.
+  ChefWhyRun:
+    Type: String
+    Default: 'False'
+    AllowedValues:
+      - 'True'
+      - 'False'
+    Description: >-
+      (Optional) When set to true, enables why-run mode, which shows what will
+      happen if the recipes are run, but does not modify target instances.
+  ChefComplianceSev:
+    Type: String
+    Default: None
+    AllowedValues:
+      - None
+      - Critical
+      - High
+      - Medium
+      - Low
+      - Informational
+      - Unspecified
+    Description: >-
+      (Optional) The severity of drift between your Chef recipes and instance
+      resources that is shown in Systems Manager compliance reports. To skip
+      compliance reporting, specify None.
+  ChefComplianceType:
+    Type: String
+    Default: 'Custom:Chef'
+    AllowedPattern: '^$|^Custom\:[a-zA-Z0-9\-_\.]{1,93}$'
+    Description: >-
+      (Optional) The compliance type that you want reported in compliance results.
+  ChefComplianceRepBucket:
+    Type: String
+    AllowedPattern: '^[^''";&\|><\*\?`\$\(\)\{\}\[\]!#\\]*$'
+    Description: >-
+      (Optional) Enter the name of the Chef compliance bucket created using 1_opsmgmt-chef-central-account.yaml. 
+      The name of an existing Amazon S3 bucket in which to store details about every Chef run executed by this document, including resource configuration and compliance results.
+###### End of Chef parameters
+
+###### Chef RunInspec parameters
+
+
   ExistingAutomationExecutionRole :
     Type : 'String'
     Description: '(Optional) The IAM role ARN of an Automation Execution role which has permissions to invoke patching Automation workflows and has a trust relationship with the central account.'
@@ -188,7 +289,47 @@ Resources:
           - 'GitHub'
         sourceInfo: 
           - '{"owner":"awslabs","repository":"amazon-ssm","path":"Compliance/InSpec/PortCheck","getOptions":"branch:master"}'
+
+  #-------------------------------------------------
+  # State Manager Association to gather Inventory data using AWS-AWSApplyChefRecipes
+  #-------------------------------------------------
+  ChefRecipeAssociation:
+    Type: AWS::SSM::Association
+    Properties:
+      AssociationName: ChefRecipe-Association
+      Name: AWS-ApplyChefRecipes
+      ScheduleExpression: "rate(1 day)"
+      OutputLocation:
+        S3Location: 
+          OutputS3BucketName: !Ref ExecutionLogsS3Bucket
+          OutputS3KeyPrefix: !Join [ '', [!Ref ChefRecipeAssocExecutionLogsS3BucketPrefix, '/', 'accountid=', !Ref 'AWS::AccountId', '/', 'region=', !Ref 'AWS::Region'] ]
+      Targets:
+      - Key: InstanceIds
+        Values:
+        - "*"
+      Parameters: 
+        SourceType: 
+          - !Ref ChefSourceType
+        SourceInfo: 
+          - !Ref ChefSourceInfo
+        RunList: 
+          - !Ref ChefRunList
+        JsonAttributesContent: 
+          - !Ref ChefJSONAttributes
+        ChefClientVersion: 
+          - !Ref ChefClientVer
+        ChefClientArguments: 
+          - !Ref ChefClientArgs
+        WhyRun: 
+          - !Ref ChefWhyRun
+        ComplianceSeverity: 
+          - !Ref ChefComplianceSev
+        ComplianceType: 
+          - !Ref ChefComplianceType
+        ComplianceReportBucket: 
+          - !Ref ChefComplianceRepBucket
         
+
   #-------------------------------------------------
   # Resource Data Sync to aggregate inventory, patching, and compliance data in the central S3 bucket
   #-------------------------------------------------

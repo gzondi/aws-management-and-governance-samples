@@ -78,7 +78,7 @@ Parameters :
       'owner', 'repository','path', 'getOptions', 'tokenInfo'. 
       If source type is S3, you can specify 'path'. 
       Example S3 parameters:
-      {"path":"https://chef-repo-eu-west-1-331922661301.s3.eu-west-1.amazonaws.com/ntp-3.12.0.tar.gz"}
+      {"path":"https://chef-repo-eu-west-1-123456789012.s3.eu-west-1.amazonaws.com/ntp-3.12.0.tar.gz"}
       Example GitHub parameters (sample includes GitHub token passed in as SSM Parameter, replace with your own SSM Paramter when using a private repo):
       {"owner":"awslabs","repository":"amazon-ssm","path":"Compliance/InSpec/PortCheck","getOptions":"branch:master","tokenInfo": "{{ssm-secure:mySecureStringParameter}}"}.
   ChefRecipeRunList:
