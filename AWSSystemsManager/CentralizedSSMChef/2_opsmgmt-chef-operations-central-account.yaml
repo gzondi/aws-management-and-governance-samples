@@ -96,7 +96,7 @@ Parameters :
       recipe[cookbook_name1::recipe_name],recipe[cookbook_name2::recipe_name]
   ChefJSONOptions:
     Type: String
-    Default: "{''}"
+    Default: ""
     Description: >-
       (Optional) Attributes JSON to pass to the Chef client that applies your
       recipes.
@@ -115,7 +115,7 @@ Parameters :
       Chef client before applying your recipes.
   ChefClientArgs:
     Type: String
-    Default: "-"
+    Default: ""
     AllowedPattern: '^[^''";&\|><\*\?`\$\(\)\{\}\[\]!#\\]*$'
     Description: >-
       (Optional) Extra arguments to be passed to the Chef client that applies
