@@ -317,7 +317,7 @@ Resources:
   ChefRecipeAssociation:
     Type: AWS::SSM::Association
     Properties:
-      AssociationName: ChefRecipe-Association
+      AssociationName: ApplyChefRecipes-Association
       Name: AWS-ApplyChefRecipes
       ScheduleExpression: "rate(1 day)"
       OutputLocation:
