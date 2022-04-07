@@ -91,12 +91,12 @@ Parameters :
       'owner', 'repository','path', 'getOptions', 'tokenInfo'. 
       If source type is S3, you can specify 'path'. 
       Example S3 parameters:
-      {"path":"https://chef-repo-eu-west-1-123456789012.s3.eu-west-1.amazonaws.com/ntp-3.12.0.tar.gz"}
+      {"path":"https://chef-repo-us-east-1-123456789012.s3.eu-west-1.amazonaws.com/ntp-3.12.0.tar.gz"}
       Example GitHub parameters (sample includes GitHub token passed in as SSM Parameter, replace with your own SSM Paramter when using a private repo):
       {"owner":"awslabs","repository":"amazon-ssm","path":"Compliance/InSpec/PortCheck","getOptions":"branch:master","tokenInfo": "{{ssm-secure:mySecureStringParameter}}"}.
   ChefRunList:
     Type: String
-    Default: ''
+    Default: 'recipe[apply-chef-recipes-example-cookbook::default]'
     Description: >-
       (Required) The Chef recipes to apply. For example,
       recipe[cookbook_name1::recipe_name],recipe[cookbook_name2::recipe_name]
@@ -171,7 +171,7 @@ Parameters :
       - GitHub
       - S3
     Description: >-
-      (Required) The source repository type for your Chef cookbooks.
+      (Required) The source repository type for your Chef RunInspec profiles.
   RunInpecSourceInfo:
     Type: String
     Default: '{"owner":"awslabs","repository":"amazon-ssm","path":"Compliance/InSpec/PortCheck","getOptions":"branch:master"}'
@@ -182,8 +182,8 @@ Parameters :
       'owner', 'repository','path', 'getOptions', 'tokenInfo'. 
       If source type is S3, you can specify 'path'. 
       Example S3 parameters:
-      {"path":"https://chef-repo-eu-west-1-123456789012.s3.eu-west-1.amazonaws.com/ntp-3.12.0.tar.gz"}
-      Example GitHub parameters (sample includes GitHub token passed in as SSM Parameter, replace with your own SSM Paramter when using a private repo):
+      {"path":"https://chef-repo-us-east-1-123456789012.s3.eu-west-1.amazonaws.com/ntp-3.12.0.tar.gz"}
+      Example GitHub parameters (sample includes GitHub token passed in as SSM Parameter Store value, replace with your own SSM Paramter when using a private repo):
       {"owner":"awslabs","repository":"amazon-ssm","path":"Compliance/InSpec/PortCheck","getOptions":"branch:master","tokenInfo": "{{ssm-secure:mySecureStringParameter}}"}.
 ####### end of RunInspec parameters
     

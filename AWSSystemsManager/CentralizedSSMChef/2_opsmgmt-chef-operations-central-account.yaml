@@ -67,7 +67,7 @@ Parameters :
     Description: >-
       Enter the name of the lambda function which will automate the Chef recipe on target accounts and instances. 
       Use a name to match the name of the Chef recipe.
-  ChefRepoType:
+  ChefSourceType:
     Type: String
     Default: S3
     AllowedValues:
@@ -75,7 +75,7 @@ Parameters :
       - S3
     Description: >-
       (Required) The source repository type for your Chef cookbooks.
-  ChefRepoInfo:
+  ChefSourceInfo:
     Type: String
     Default: '{"path":"https://aws-applychefrecipes-examples.s3.amazonaws.com/apply-chef-recipes-example-cookbook.tar.gz"}'
     Description: >-
@@ -85,18 +85,18 @@ Parameters :
       'owner', 'repository','path', 'getOptions', 'tokenInfo'. 
       If source type is S3, you can specify 'path'. 
       Example S3 parameters:
-      {"path":"https://chef-repo-eu-west-1-123456789012.s3.eu-west-1.amazonaws.com/ntp-3.12.0.tar.gz"}
+      {"path":"https://chef-repo-us-east-1-123456789012.s3.eu-west-1.amazonaws.com/ntp-3.12.0.tar.gz"}
       Example GitHub parameters (sample includes GitHub token passed in as SSM Parameter, replace with your own SSM Paramter when using a private repo):
       {"owner":"awslabs","repository":"amazon-ssm","path":"Compliance/InSpec/PortCheck","getOptions":"branch:master","tokenInfo": "{{ssm-secure:mySecureStringParameter}}"}.
-  ChefRecipeRunList:
+  ChefRunList:
     Type: String
-    Default: recipe[ntp::default]
+    Default: recipe[apply-chef-recipes-example-cookbook::default]
     Description: >-
       (Required) The Chef recipes to apply. For example,
       recipe[cookbook_name1::recipe_name],recipe[cookbook_name2::recipe_name]
   ChefJSONOptions:
     Type: String
-    Default: " "
+    Default: "{''}"
     Description: >-
       (Optional) Attributes JSON to pass to the Chef client that applies your
       recipes.
@@ -115,7 +115,7 @@ Parameters :
       Chef client before applying your recipes.
   ChefClientArgs:
     Type: String
-    Default: " "
+    Default: "-"
     AllowedPattern: '^[^''";&\|><\*\?`\$\(\)\{\}\[\]!#\\]*$'
     Description: >-
       (Optional) Extra arguments to be passed to the Chef client that applies
@@ -154,6 +154,7 @@ Parameters :
   ChefComplianceRepBucket:
     Type: String
     AllowedPattern: '^[^''";&\|><\*\?`\$\(\)\{\}\[\]!#\\]*$'
+    Default: 'None'
     Description: >-
       (Optional) Enter the name of the Chef compliance bucket created using 1_opsmgmt-chef-central-account.yaml. 
       The name of an existing Amazon S3 bucket in which to store details about every Chef run executed by this document, including resource configuration and compliance results.
@@ -269,9 +270,9 @@ Resources:
               b = str(TargetRegionIds)
               TargetRegionIdsArray = b.split(",")
               
-              ChefRepoType=os.environ['ChefRepoType']
-              ChefRepoInfo=os.environ['ChefRepoInfo']
-              ChefRecipeRunList=os.environ['ChefRecipeRunList']
+              ChefSourceType=os.environ['ChefSourceType']
+              ChefSourceInfo=os.environ['ChefSourceInfo']
+              ChefRunList=os.environ['ChefRunList']
               ChefClientVer=os.environ['ChefClientVer']
               ChefWhyRun=os.environ['ChefWhyRun']
               ChefComplianceSev=os.environ['ChefComplianceSev']
@@ -293,9 +294,9 @@ Resources:
                   
                   Parameters={
                       'AutomationAssumeRole':[f'arn:aws:iam::{MasterAccountID}:role/AWS-SystemsManager-AutomationAdministrationRole'] ,
-                      'SourceType' : [f'{ChefRepoType}'] ,
-                      'SourceInfo' : [f'{ChefRepoInfo}'] ,
-                      'RunList' : [f'{ChefRecipeRunList}'] ,
+                      'SourceType' : [f'{ChefSourceType}'] ,
+                      'SourceInfo' : [f'{ChefSourceInfo}'] ,
+                      'RunList' : [f'{ChefRunList}'] ,
                       'JsonAttributesContent' : [f'{ChefJSONOptions}'] ,
                       'ChefClientVersion' : [f'{ChefClientVer}'] ,
                       'ChefClientArguments' : [f'{ChefClientArgs}'] ,
@@ -320,9 +321,9 @@ Resources:
                   
                   Parameters={
                       'AutomationAssumeRole':[f'arn:aws:iam::{MasterAccountID}:role/AWS-SystemsManager-AutomationAdministrationRole'] ,
-                      'SourceType' : [f'{ChefRepoType}'] ,
-                      'SourceInfo' : [f'{ChefRepoInfo}'] ,
-                      'RunList' : [f'{ChefRecipeRunList}'] ,
+                      'SourceType' : [f'{ChefSourceType}'] ,
+                      'SourceInfo' : [f'{ChefSourceInfo}'] ,
+                      'RunList' : [f'{ChefRunList}'] ,
                       'JsonAttributesContent' : [f'{ChefJSONOptions}'] ,
                       'ChefClientVersion' : [f'{ChefClientVer}'] ,
                       'WhyRun' : [f'{ChefWhyRun}'] ,
@@ -346,9 +347,9 @@ Resources:
                   
                   Parameters={
                       'AutomationAssumeRole':[f'arn:aws:iam::{MasterAccountID}:role/AWS-SystemsManager-AutomationAdministrationRole'] ,
-                      'SourceType' : [f'{ChefRepoType}'] ,
-                      'SourceInfo' : [f'{ChefRepoInfo}'] ,
-                      'RunList' : [f'{ChefRecipeRunList}'] ,
+                      'SourceType' : [f'{ChefSourceType}'] ,
+                      'SourceInfo' : [f'{ChefSourceInfo}'] ,
+                      'RunList' : [f'{ChefRunList}'] ,
                       'ChefClientVersion' : [f'{ChefClientVer}'] ,
                       'WhyRun' : [f'{ChefWhyRun}'] ,
                       'ComplianceSeverity' : [f'{ChefComplianceSev}'] ,
@@ -371,9 +372,9 @@ Resources:
                   
                   Parameters={
                       'AutomationAssumeRole':[f'arn:aws:iam::{MasterAccountID}:role/AWS-SystemsManager-AutomationAdministrationRole'] ,
-                      'SourceType' : [f'{ChefRepoType}'] ,
-                      'SourceInfo' : [f'{ChefRepoInfo}'] ,
-                      'RunList' : [f'{ChefRecipeRunList}'] ,
+                      'SourceType' : [f'{ChefSourceType}'] ,
+                      'SourceInfo' : [f'{ChefSourceInfo}'] ,
+                      'RunList' : [f'{ChefRunList}'] ,
                       'ChefClientVersion' : [f'{ChefClientVer}'] ,
                       'WhyRun' : [f'{ChefWhyRun}'] ,
                       'ComplianceSeverity' : [f'{ChefComplianceSev}'] ,
@@ -396,9 +397,9 @@ Resources:
             TargetAccounts: !Ref TargetAccounts
             TargetRegionIds: !Ref TargetRegionIds
             
-            ChefRepoType: !Ref ChefRepoType
-            ChefRepoInfo: !Ref ChefRepoInfo
-            ChefRecipeRunList: !Ref ChefRecipeRunList
+            ChefSourceType: !Ref ChefSourceType
+            ChefSourceInfo: !Ref ChefSourceInfo
+            ChefRunList: !Ref ChefRunList
             ChefClientVer: !Ref ChefClientVer
             ChefWhyRun: !Ref ChefWhyRun
             ChefComplianceSev: !Ref ChefComplianceSev
@@ -512,3 +513,17 @@ Resources:
             description: >-
               This command runs the Command document ```AWS-ApplyChefRecipes``` on the
               specified instances.
+
+Outputs:
+  ChefSourceTypeName:
+    Description: The source type of the repository used to store the Chef recipes.
+    Value: !Ref ChefSourceType
+  ChefSourceInfoDetails:
+    Description: The Chef recipe source info details for S3 or Github.
+    Value: !Ref ChefSourceInfo
+  ChefRunListDetails:
+    Description: The Chef recipe run list specified.
+    Value: !Ref ChefRunList
+  ChefClientVersionDetails:
+    Description: The Chef client version which executed the recipe.
+    Value: !Ref ChefClientVer
