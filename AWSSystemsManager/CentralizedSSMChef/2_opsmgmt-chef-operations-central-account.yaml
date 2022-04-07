@@ -492,7 +492,7 @@ Resources:
             timeoutSeconds: 7200
             onFailure: Abort
             inputs:
-              DocumentName: AWS-ApplyChefRecipes
+              DocumentName: !Sub AWS-ApplyChefRecipes-${ChefLambdaFunctionName}
               Targets:
               - Key: 'resource-groups:Name'
                 Values:
