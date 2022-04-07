@@ -154,7 +154,7 @@ Parameters :
   ChefComplianceRepBucket:
     Type: String
     AllowedPattern: '^[^''";&\|><\*\?`\$\(\)\{\}\[\]!#\\]*$'
-    Default: 'None'
+    Default: ''
     Description: >-
       (Optional) Enter the name of the Chef compliance bucket created using 1_opsmgmt-chef-central-account.yaml. 
       The name of an existing Amazon S3 bucket in which to store details about every Chef run executed by this document, including resource configuration and compliance results.
@@ -187,7 +187,7 @@ Resources:
     Type: AWS::Events::Rule
     Properties:
       Description: Cloudwatch Schedule Event Rule Created for Scheduled SSM MultiAccount Chef recipe execution using lambda
-      Name: Schedule-Trigger-for-Lambda-${ChefLambdaFunctionName}
+      Name: !Sub Schedule-Trigger-for-Lambda-${ChefLambdaFunctionName}
       ScheduleExpression:
         Ref: CloudWatchEventRuleSchedule
       State: ENABLED
