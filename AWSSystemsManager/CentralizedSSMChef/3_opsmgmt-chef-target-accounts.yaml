@@ -52,7 +52,26 @@ Parameters :
     Type : 'String'
     Description: 'Name of the prefix to use in the central account S3 bucket for RunInspec execution data.'
     Default: 'runinspec-execution-logs'
-
+  ExistingAutomationExecutionRole :
+    Type : 'String'
+    Description: '(Optional) The IAM role ARN of an Automation Execution role which has permissions to invoke patching Automation workflows and has a trust relationship with the central account.'
+    Default: ''
+  ChefManagedInstanceDataEncryptionKey:
+    Type : 'String'
+    Description: 'KMS Key used to encrypt S3 bucket.'
+    Default: ''
+  ResourceSyncS3Bucket :
+    Type : 'String'
+    Description: 'Name of the Resource Data Sync S3 bucket that lives in the central account.'
+    Default: ''
+  ResourceSyncS3BucketRegion :
+    Type : 'String'
+    Description: 'Region where the Resource Data Sync S3 bucket is located.'
+    Default: ''
+  ResourceDataSyncName :
+    Type : 'String'
+    Description: 'Name for the Resource Data Sync.'
+    Default: 'InventoryData'
   ############# Parameters for SSM AWS-ApplyChefRecipes Document required for State Manager Association
   ChefSourceType:
     Type: String
@@ -144,12 +163,10 @@ Parameters :
     Description: >-
       (Optional) Enter the name of the Chef compliance bucket created using 1_opsmgmt-chef-central-account.yaml. 
       The name of an existing Amazon S3 bucket in which to store details about every Chef run executed by this document, including resource configuration and compliance results.
-###### End of Chef parameters
-
 ###### Chef RunInspec parameters
   RunInspecSourceType:
     Type: String
-    Default: S3
+    Default: GitHub
     AllowedValues:
       - GitHub
       - S3
@@ -157,7 +174,7 @@ Parameters :
       (Required) The source repository type for your Chef cookbooks.
   RunInpecSourceInfo:
     Type: String
-    Default: '{"path":"https://aws-applychefrecipes-examples.s3.amazonaws.com/apply-chef-recipes-example-cookbook.tar.gz"}'
+    Default: '{"owner":"awslabs","repository":"amazon-ssm","path":"Compliance/InSpec/PortCheck","getOptions":"branch:master"}'
     Description: >-
       (Required) Information about the source repository, such as repository
       name, owner, branch if on GitHub, or path if Amazon S3. 
@@ -168,28 +185,7 @@ Parameters :
       {"path":"https://chef-repo-eu-west-1-123456789012.s3.eu-west-1.amazonaws.com/ntp-3.12.0.tar.gz"}
       Example GitHub parameters (sample includes GitHub token passed in as SSM Parameter, replace with your own SSM Paramter when using a private repo):
       {"owner":"awslabs","repository":"amazon-ssm","path":"Compliance/InSpec/PortCheck","getOptions":"branch:master","tokenInfo": "{{ssm-secure:mySecureStringParameter}}"}.
-
-
-  ExistingAutomationExecutionRole :
-    Type : 'String'
-    Description: '(Optional) The IAM role ARN of an Automation Execution role which has permissions to invoke patching Automation workflows and has a trust relationship with the central account.'
-    Default: ''
-  ChefManagedInstanceDataEncryptionKey:
-    Type : 'String'
-    Description: 'KMS Key used to encrypt S3 bucket.'
-    Default: ''
-  ResourceSyncS3Bucket :
-    Type : 'String'
-    Description: 'Name of the Resource Data Sync S3 bucket that lives in the central account.'
-    Default: ''
-  ResourceSyncS3BucketRegion :
-    Type : 'String'
-    Description: 'Region where the Resource Data Sync S3 bucket is located.'
-    Default: ''
-  ResourceDataSyncName :
-    Type : 'String'
-    Description: 'Name for the Resource Data Sync.'
-    Default: 'InventoryData'
+####### end of RunInspec parameters
     
 Conditions:
   CreateAutomationExecutionRoleCondition:
