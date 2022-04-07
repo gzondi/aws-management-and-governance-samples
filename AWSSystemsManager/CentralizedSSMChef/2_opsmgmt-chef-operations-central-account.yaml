@@ -215,7 +215,7 @@ Resources:
   ChefAWSLambdaSSMMultiAccountRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: ChefAWS-Lambda-SSM-MultiAccountRole
+      RoleName: !Sub ChefAWS-Lambda-SSM-MultiAccountRole-${ChefLambdaFunctionName}
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
