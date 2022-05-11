@@ -63,7 +63,7 @@ Parameters :
   ############# Parameters for SSM AWS-ApplyChefRecipes Document
   ChefLambdaFunctionName:
     Type: String
-    Default: MultiAccountChefFunction-
+    Default: MultiAccountChefFunction-{Recipe Name}
     Description: >-
       Enter the name of the lambda function which will automate the Chef recipe on target accounts and instances. 
       Use a name to match the name of the Chef recipe.
@@ -215,7 +215,7 @@ Resources:
   ChefAWSLambdaSSMMultiAccountRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub Lambda-SSM-MultiAccountRole-${ChefLambdaFunctionName}
+      RoleName: !Sub 'Lambda-SSM-MultiAccountRole-${ChefLambdaFunctionName}'
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -355,6 +355,30 @@ Resources:
                       'ComplianceSeverity' : [f'{ChefComplianceSev}'] ,
                       'ComplianceType' : [f'{ChefComplianceType}'] ,
                       'ComplianceReportBucket' : [f'{ChefComplianceRepBucket}'] ,
+                  },
+                  TargetLocations=[
+                      {
+                          'Accounts': TargetAccountsArray,
+                          'Regions': TargetRegionIdsArray,
+                          'TargetLocationMaxConcurrency': f'{TargetLocationMaxConcurrency}',
+                          'TargetLocationMaxErrors': f'{TargetLocationMaxErrors}',
+                          'ExecutionRoleName': f'{ExecutionRoleName}'
+                      }
+                  ]
+              )
+              elif len(ChefComplianceType) > 0 or len(ChefComplianceRepBucket) > 0:
+                  response = client.start_automation_execution(
+                  DocumentName=f'{AutomationDocumentMamrAWSApplyChefRecipes}',
+                  
+                  Parameters={
+                      'AutomationAssumeRole':[f'arn:aws:iam::{MasterAccountID}:role/AWS-SystemsManager-AutomationAdministrationRole'] ,
+                      'SourceType' : [f'{ChefSourceType}'] ,
+                      'SourceInfo' : [f'{ChefSourceInfo}'] ,
+                      'RunList' : [f'{ChefRunList}'] ,
+                      'ChefClientVersion' : [f'{ChefClientVer}'] ,
+                      'WhyRun' : [f'{ChefWhyRun}'] ,
+                      'ComplianceSeverity' : [f'{ChefComplianceSev}'] ,
+                      'ComplianceType' : [f'{ChefComplianceType}']
                   },
                   TargetLocations=[
                       {
