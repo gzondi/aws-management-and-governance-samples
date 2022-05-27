@@ -26,17 +26,102 @@
 
 AWSTemplateFormatVersion: '2010-09-09'
 Description: AWS CloudFormation template to create a scheduled multi-account and multi-region SSM Automation with Lambda and AWS-ApplyChefRecipes SMM document.
-
+Metadata:
+  'AWS::CloudFormation::Interface':
+  #ParameterGroup is a property that defines a parameter group and the parameters to include in the group.
+    ParameterGroups:
+      - Label:
+          default: General Configuration
+        Parameters:
+          - ChefLambdaFunctionName
+          - CloudWatchEventRuleSchedule
+          - ExecutionLogsBucket
+          - ExecutionRoleName
+          - MaximumConcurrency
+          - MaximumErrors
+          - ResourceGroupName
+      - Label:
+          default: Chef Cookbook and Recipe Configuration
+        Parameters:
+          - ChefSourceType
+          - ChefSourceInfo
+          - ChefRunList
+          - ChefJSONOptions
+          - ChefClientVer
+          - ChefClientArgs
+          - ChefWhyRun
+          - ChefComplianceSev
+          - ChefComplianceType
+          - ChefComplianceRepBucket
+      - Label:
+          default: SSM Automation Document Target Configuration
+        Parameters:
+          - TargetAccounts
+          - TargetLocationMaxConcurrency
+          - TargetLocationMaxErrors
+          - TargetRegionIds
+    
+    #ParameterLabel is a property that specifies a friendly name or description for a parameter that the AWS CloudFormation console shows instead of the parameter's logical ID.
+    ParameterLabels:
+      ChefLambdaFunctionName:
+        default: Chef Recipe Lambda Function Name
+      CloudWatchEventRuleSchedule:
+        default: CloudWatch EventRule Schedule
+      ExecutionLogsBucket:
+        default: Execution Logs Bucket
+      ExecutionRoleName:
+        default: Execution Role Name
+      MaximumConcurrency:
+        default: Maximum Concurrency
+      MaximumErrors:
+        default: Maximum Errors
+      ResourceGroupName:
+        default: Resource Group Name
+      ChefSourceType:
+        default: Chef Source Type for Cookbook or Recipe Storage
+      ChefSourceInfo:
+        default: Chef Source Info for path to Cookbook or Recipe
+      ChefRunList:
+        default: Chef Recipe Run List from Cookbook selected
+      ChefJSONOptions:
+        default: Chef Recipe Attributes passed as JSON Options
+      ChefClientVer:
+        default: Chef Client Version
+      ChefClientArgs:
+        default: Chef Client Arguments or Options
+      ChefWhyRun:
+        default: Chef Why Run
+      ChefComplianceSev:
+        default: Chef Compliance Severity
+      ChefComplianceType:
+        default: Chef Compliance Type
+      ChefComplianceRepBucket:
+        default: Chef Compliance Report S3 Bucket
+      TargetAccounts:
+        default: Target Accounts
+      TargetLocationMaxConcurrency:
+        default: Target Location Max Concurrency
+      TargetLocationMaxErrors:
+        default: Target Location Max Errors
+      TargetRegionIds:
+        default: Target Region Ids
+      
 #-----------------------------------------------------------
-# Parameters
+# General Parameters
 #-----------------------------------------------------------
 Parameters :
-  
+  ChefLambdaFunctionName:
+    Type: String
+    Default: MultiAccountChefFunction-{Recipe Name}
+    Description: >-
+      Enter the name of the lambda function which will automate the Chef recipe on target accounts and instances. 
+      Use a name to match the name of the Chef recipe.
   CloudWatchEventRuleSchedule:
     Type: String
     Description: 'The cron or rate expression to use for the CloudWatch Event rule. For example: cron(0 09 ? * FRI *). Important: The time zone used is UTC.'
   ExecutionLogsBucket:
     Type: String
+    Default: ssm-execution-logs-af-south-1-{CentralAWSAccountID}
     Description: >-
       Enter the name of the execution logs bucket created using opsmgmt-central-account.yaml.
   ExecutionRoleName:
@@ -59,14 +144,9 @@ Parameters :
     Default: WebServers
     Description: >-
       Enter a resource group that includes the resources you want to target. Important: The Resource Group name is case sensitive.
-    
-  ############# Parameters for SSM AWS-ApplyChefRecipes Document
-  ChefLambdaFunctionName:
-    Type: String
-    Default: MultiAccountChefFunction-{Recipe Name}
-    Description: >-
-      Enter the name of the lambda function which will automate the Chef recipe on target accounts and instances. 
-      Use a name to match the name of the Chef recipe.
+  #-----------------------------------------------------------  
+  # Parameters for SSM AWS-ApplyChefRecipes Document
+  #-----------------------------------------------------------
   ChefSourceType:
     Type: String
     Default: S3
@@ -153,12 +233,13 @@ Parameters :
       (Optional) The compliance type that you want reported in compliance results.
   ChefComplianceRepBucket:
     Type: String
-    AllowedPattern: '^[^''";&\|><\*\?`\$\(\)\{\}\[\]!#\\]*$'
-    Default: ''
+    Default: 'chef-compliance-report-af-south-1-{CentralAWSAccountId}'
     Description: >-
-      (Optional) Enter the name of the Chef compliance bucket created using 1_opsmgmt-chef-central-account.yaml. 
+      (Required) Enter the name of the Chef compliance bucket created using 1_opsmgmt-chef-central-account.yaml. 
       The name of an existing Amazon S3 bucket in which to store details about every Chef run executed by this document, including resource configuration and compliance results.
-  ############# Parameters for Target Account, Target Region and Concurrency of Run Command Execution  
+  #-----------------------------------------------------------
+  # Parameters for Target Account, Target Region and Concurrency of Run Command Execution  
+  #-----------------------------------------------------------
   TargetAccounts:
     Type: String
     Description: >-
@@ -179,10 +260,17 @@ Parameters :
       Comma separated list of AWS Regions to target. For example: us-east-1,ap-south-1.
       
 Resources:
-
   #-------------------------------------------------
-  # CloudWatch Event and permissions to invoke the Lambda function for multi-account/multi-Region Automation
+  # Create log group with custom log expiration for Multi Account Lambda function
   #-------------------------------------------------
+  MultiAccountLambdaLogGroup:
+    Type: "AWS::Logs::LogGroup"
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${ChefLambdaFunctionName}"
+      RetentionInDays: 90  # Custom expiration!
+#-------------------------------------------------
+# CloudWatch Event and permissions to invoke the Lambda function for multi-account/multi-Region Automation
+#-------------------------------------------------
   ChefCWScheduleEventCFN:
     Type: AWS::Events::Rule
     Properties:
@@ -209,9 +297,9 @@ Resources:
         - ChefCWScheduleEventCFN
         - Arn
         
-  #-------------------------------------------------
-  # Lambda function and IAM role to make the multi-account/multi-Region Automation API call
-  #-------------------------------------------------
+#-------------------------------------------------
+# IAM role to make the multi-account/multi-Region Automation API call
+#-------------------------------------------------
   ChefAWSLambdaSSMMultiAccountRole:
     Type: AWS::IAM::Role
     Properties:
@@ -225,31 +313,37 @@ Resources:
             - ssm.amazonaws.com
             - lambda.amazonaws.com
           Action: sts:AssumeRole
-      Path: "/"
-      Policies:
-      - PolicyName: ChefAWSLambdaSSMMultiAccountPolicy
-        PolicyDocument:
-          Version: '2012-10-17'
-          Statement:
+#-------------------------------------------------
+# IAM policy to make the multi-account/multi-Region Automation API call
+#-------------------------------------------------
+  ChefMultiAccountIAMPolicy:
+    Type: "AWS::IAM::Policy"
+    Properties:
+      PolicyName: ChefAWSLambdaSSMMultiAccountPolicy
+      Roles:
+        - !Ref ChefAWSLambdaSSMMultiAccountRole
+      PolicyDocument:  
+        Version: '2012-10-17'
+        Statement:
           - Effect: Allow
             Action:
-            - ssm:StartAutomationExecution
+              - ssm:StartAutomationExecution
             Resource:
               - Fn::Sub: arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${AutomationDocumentMamrAWSApplyChefRecipes}:$DEFAULT
-          - Action: iam:PassRole
+          - Effect: Allow  
+            Action: 
+              - iam:PassRole
             Resource:
-              Fn::Sub: arn:${AWS::Partition}:iam::${AWS::AccountId}:role/AWS-SystemsManager-AutomationAdministrationRole
-            Effect: Allow
-          - Action: logs:CreateLogGroup
+              - Fn::Sub: arn:${AWS::Partition}:iam::${AWS::AccountId}:role/AWS-SystemsManager-AutomationAdministrationRole
+          - Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
             Resource:
-              Fn::Sub: arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:*
-            Effect: Allow
-          - Action:
-            - logs:CreateLogStream
-            - logs:PutLogEvents
-            Resource:
-              Fn::Sub: arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ChefLambdaFunctionName}:*
-            Effect: Allow
+              - !Sub arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ChefLambdaFunctionName}:*
+#-------------------------------------------------            
+# Lambda function for Multi-Account / Multi-Region
+#------------------------------------------------- 
   MultiAccountChefLambdaFunction:
     Type: AWS::Lambda::Function
     Properties: 
@@ -274,11 +368,12 @@ Resources:
               ChefSourceInfo=os.environ['ChefSourceInfo']
               ChefRunList=os.environ['ChefRunList']
               ChefClientVer=os.environ['ChefClientVer']
+              
               ChefWhyRun=os.environ['ChefWhyRun']
               ChefComplianceSev=os.environ['ChefComplianceSev']
               ChefComplianceType=os.environ['ChefComplianceType']
+              
               ChefComplianceRepBucket=os.environ['ChefComplianceRepBucket']
-
               ChefJSONOptions=os.environ['ChefJSONOptions']
               ChefClientArgs=os.environ['ChefClientArgs']
 
@@ -351,34 +446,11 @@ Resources:
                       'SourceInfo' : [f'{ChefSourceInfo}'] ,
                       'RunList' : [f'{ChefRunList}'] ,
                       'ChefClientVersion' : [f'{ChefClientVer}'] ,
+                      'ChefClientArguments' : [f'{ChefClientArgs}'] ,
                       'WhyRun' : [f'{ChefWhyRun}'] ,
                       'ComplianceSeverity' : [f'{ChefComplianceSev}'] ,
                       'ComplianceType' : [f'{ChefComplianceType}'] ,
                       'ComplianceReportBucket' : [f'{ChefComplianceRepBucket}'] ,
-                  },
-                  TargetLocations=[
-                      {
-                          'Accounts': TargetAccountsArray,
-                          'Regions': TargetRegionIdsArray,
-                          'TargetLocationMaxConcurrency': f'{TargetLocationMaxConcurrency}',
-                          'TargetLocationMaxErrors': f'{TargetLocationMaxErrors}',
-                          'ExecutionRoleName': f'{ExecutionRoleName}'
-                      }
-                  ]
-              )
-              elif len(ChefComplianceType) > 0 or len(ChefComplianceRepBucket) > 0:
-                  response = client.start_automation_execution(
-                  DocumentName=f'{AutomationDocumentMamrAWSApplyChefRecipes}',
-                  
-                  Parameters={
-                      'AutomationAssumeRole':[f'arn:aws:iam::{MasterAccountID}:role/AWS-SystemsManager-AutomationAdministrationRole'] ,
-                      'SourceType' : [f'{ChefSourceType}'] ,
-                      'SourceInfo' : [f'{ChefSourceInfo}'] ,
-                      'RunList' : [f'{ChefRunList}'] ,
-                      'ChefClientVersion' : [f'{ChefClientVer}'] ,
-                      'WhyRun' : [f'{ChefWhyRun}'] ,
-                      'ComplianceSeverity' : [f'{ChefComplianceSev}'] ,
-                      'ComplianceType' : [f'{ChefComplianceType}']
                   },
                   TargetLocations=[
                       {
@@ -425,11 +497,12 @@ Resources:
             ChefSourceInfo: !Ref ChefSourceInfo
             ChefRunList: !Ref ChefRunList
             ChefClientVer: !Ref ChefClientVer
+            
             ChefWhyRun: !Ref ChefWhyRun
             ChefComplianceSev: !Ref ChefComplianceSev
             ChefComplianceType: !Ref ChefComplianceType
+            
             ChefComplianceRepBucket: !Ref ChefComplianceRepBucket
-
             ChefJSONOptions: !Ref ChefJSONOptions
             ChefClientArgs: !Ref ChefClientArgs
             
@@ -443,12 +516,13 @@ Resources:
       Handler: index.handler
       Role: !GetAtt ChefAWSLambdaSSMMultiAccountRole.Arn 
       Runtime: python3.7
-      
+
   #-------------------------------------------------
   # Automation document to run AWS-RunPatchBaseline on target resources
   #-------------------------------------------------
   AutomationDocumentMamrAWSApplyChefRecipes:
     Type: AWS::SSM::Document
+    DependsOn: MultiAccountLambdaLogGroup
     Properties: 
       DocumentType: Automation
       Content:
@@ -471,7 +545,7 @@ Resources:
             type: StringMap
             default:
               path: >-
-                ""
+                '{"path":"https://aws-applychefrecipes-examples.s3.amazonaws.com/apply-chef-recipes-example-cookbook.tar.gz"}'
             description: >-
               (Required) Information about the source repository, such as repository
               name, owner, branch if on GitHub, or path if Amazon S3. If source type is
@@ -481,7 +555,7 @@ Resources:
               {"owner":"awslabs","repository":"amazon-ssm","path":"Compliance/InSpec/PortCheck","getOptions":"branch:master"}.
           RunList:
             type: String
-            default: 'recipe[ntp::default]'
+            default: 'recipe[apply-chef-recipes-example-cookbook::default]'
             description: >-
               (Required) The Chef recipes to apply. For example,
               recipe[cookbook_name1::recipe_name],recipe[cookbook_name2::recipe_name]          
@@ -490,11 +564,23 @@ Resources:
             default: "False"
             description: >-
               (Optional) When set to true, enables why-run mode, which shows what will happen if the recipes are run, but does not modify target instances.
+          JsonAttributesContent:
+            type: String
+            default: ""
+            description: >-
+              (Optional) Attributes JSON to pass to the Chef client that applies your recipes.
           ChefClientVersion:
             type: String
             default: '14'
             description: >-
               (Optional) The Chef client version to install on instances before recipes are applied. If None is specified, Systems Manager does not install the Chef client before applying your recipes.        
+          ChefClientArguments:
+            type: String
+            default: ""
+            description: >-
+              (Optional) Extra arguments to be passed to the Chef client that applies
+              your recipes. For more information about available arguments, run
+              chef-client -h from an instance that has the Chef client installed.
           ComplianceSeverity:
             type: String
             default: None
@@ -525,7 +611,9 @@ Resources:
                 SourceType: '{{ SourceType }}'
                 SourceInfo: '{{ SourceInfo }}'
                 RunList: '{{ RunList }}'
+                JsonAttributesContent: '{{ JsonAttributesContent }}'
                 ChefClientVersion: '{{ ChefClientVersion }}'
+                ChefClientArguments: '{{ ChefClientArguments }}'
                 WhyRun: '{{ WhyRun }}'
                 ComplianceSeverity: '{{ ComplianceSeverity }}'
                 ComplianceType: '{{ ComplianceType }}'

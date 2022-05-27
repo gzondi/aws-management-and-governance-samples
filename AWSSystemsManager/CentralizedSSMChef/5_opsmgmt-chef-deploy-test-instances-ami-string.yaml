@@ -39,6 +39,7 @@ Parameters :
     Description: 'Name of the Chef Recipe S3 bucket that lives in the central account.'
   ChefComplianceRepS3Bucket :
     Type : 'String'
+    Default: !Sub 'chef-compliance-report-${AWS::Region}-${AWS::AccountId}'
     Description: 'Name of the Chef compliance logs S3 bucket that lives in the central account.'
   ExistingManagedInstanceProfile : 
     Type : 'String'
@@ -76,9 +77,9 @@ Resources:
            - "AWS::AllSupported"
           TagFilters:
             -
-              Key: "Chef"
+              Key: "ChefGroup"
               Values: 
-                - "True"
+                - "CustomAmazonLinux"
 
   #-------------------------------------------------
   # IAM role and instance profile to enable Systems Manager registration on EC2 instances
@@ -247,29 +248,5 @@ Resources:
           Value: AmazonLinux
         - Key: Chef
           Value: 'True'
-        - Key: 'Chef Group'
+        - Key: 'ChefGroup'
           Value: 'CustomAmazonLinux'
-  WindowsEc2Instance: 
-    Type: AWS::EC2::Instance
-    Properties: 
-      InstanceType: t3.small
-      ImageId: !Ref LatestWindowsAmiId
-      NetworkInterfaces: 
-        - AssociatePublicIpAddress: "true"
-          DeviceIndex: "0"
-          GroupSet: 
-            - Ref: "InstanceSecurityGroup"
-          SubnetId: 
-            Ref: "SubnetPublic"
-      IamInstanceProfile: 
-         Fn::If:
-          - CreateManagedInstanceProfileCondition
-          - !Ref ManagedInstanceProfile
-          - !Ref ExistingManagedInstanceProfile
-      Tags:
-        - Key: Name
-          Value: Windows
-        - Key: Chef
-          Value: 'True'
-        - Key: 'Chef Group'
-          Value: 'CustomWindows'

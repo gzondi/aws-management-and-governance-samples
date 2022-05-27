@@ -25,7 +25,89 @@
 #------------------------------------------------------------------------------
 
 AWSTemplateFormatVersion: '2010-09-09'
-Description: AWS CloudFormation template to configure a target account for a scheduled multi-account and multi-region Automation for Chef recipe execution.
+Description: AWS CloudFormation template to configure a target account with State Manager Associations and SSM Resource Sync for a scheduled multi-account and multi-region Automation for Chef recipe and RunInspec.
+Metadata:
+  'AWS::CloudFormation::Interface':
+  #ParameterGroup is a property that defines a parameter group and the parameters to include in the group.
+    ParameterGroups:
+      - Label:
+          default: General Configuration
+        Parameters:
+          - CentralAccountNumber
+          - ExecutionLogsS3Bucket
+          - InventoryExecutionLogsS3BucketPrefix
+          - RunInspecExecutionLogsS3BucketPrefix
+          - ChefRecipeAssocExecutionLogsS3BucketPrefix
+          - ExistingAutomationExecutionRole
+          - ChefManagedInstanceDataEncryptionKey
+          - ResourceSyncS3Bucket
+          - ResourceSyncS3BucketRegion
+          - ResourceDataSyncName
+      - Label:
+          default: Chef Cookbook and Recipe Association Configuration
+        Parameters:
+          - ChefSourceType
+          - ChefSourceInfo
+          - ChefRunList
+          - ChefJSONOptions
+          - ChefClientVer
+          - ChefClientArgs
+          - ChefWhyRun
+          - ChefComplianceSev
+          - ChefComplianceType
+          - ChefComplianceRepBucket
+      - Label:
+          default: Chef RunInspec Association Configuration
+        Parameters:
+          - RunInspecSourceType
+          - RunInpecSourceInfo
+    
+    #ParameterLabel is a property that specifies a friendly name or description for a parameter that the AWS CloudFormation console shows instead of the parameter's logical ID.
+    ParameterLabels:
+      CentralAccountNumber:
+        default: Central Account Number
+      ExecutionLogsS3Bucket:
+        default: Execution Logs S3 Bucket
+      InventoryExecutionLogsS3BucketPrefix:
+        default: Inventory Execution Logs S3 Bucket Prefix
+      RunInspecExecutionLogsS3BucketPrefix:
+        default: Run Inspec Execution Logs S3 Bucket Prefix
+      ChefRecipeAssocExecutionLogsS3BucketPrefix:
+        default: Chef Recipe Assoc Execution Logs S3 Bucket Prefix
+      ExistingAutomationExecutionRole:
+        default: ExistingAutomationExecutionRole
+      ChefManagedInstanceDataEncryptionKey:
+        default: ChefManagedInstanceDataEncryptionKey
+      ResourceSyncS3Bucket:
+        default: ResourceSyncS3Bucket
+      ResourceSyncS3BucketRegion:
+        default: ResourceSyncS3BucketRegion
+      ResourceDataSyncName:
+        default: ResourceDataSyncName
+      ChefSourceType:
+        default: Chef Source Type for Cookbook or Recipe Storage
+      ChefSourceInfo:
+        default: Chef Source Info for path to Cookbook or Recipe
+      ChefRunList:
+        default: Chef Recipe Run List from Cookbook selected
+      ChefJSONOptions:
+        default: Chef Recipe Attributes passed as JSON Options
+      ChefClientVer:
+        default: Chef Client Version
+      ChefClientArgs:
+        default: Chef Client Arguments or Options
+      ChefWhyRun:
+        default: Chef Why Run
+      ChefComplianceSev:
+        default: Chef Compliance Severity
+      ChefComplianceType:
+        default: Chef Compliance Type
+      ChefComplianceRepBucket:
+        default: Chef Compliance Report S3 Bucket
+      RunInspecSourceType:
+        default: RunInspecSourceType
+      RunInpecSourceInfo:
+        default: RunInpecSourceInfo
 
 #-----------------------------------------------------------
 # Parameters
@@ -39,7 +121,7 @@ Parameters :
   ExecutionLogsS3Bucket :
     Type : 'String'
     Description: 'Name of the S3 bucket that lives in the central account.'
-    Default: ''
+    Default: 'ssm-execution-logs-af-south-1-{CentralAWSAccountID}'
   InventoryExecutionLogsS3BucketPrefix :
     Type : 'String'
     Description: 'Name of the prefix to use in the central account S3 bucket for inventory execution data.'
@@ -63,7 +145,7 @@ Parameters :
   ResourceSyncS3Bucket :
     Type : 'String'
     Description: 'Name of the Resource Data Sync S3 bucket that lives in the central account.'
-    Default: ''
+    Default: 'ssm-resource-sync-af-south-1-{CentralAWSAccountID}'
   ResourceSyncS3BucketRegion :
     Type : 'String'
     Description: 'Region where the Resource Data Sync S3 bucket is located.'
@@ -72,7 +154,9 @@ Parameters :
     Type : 'String'
     Description: 'Name for the Resource Data Sync.'
     Default: 'InventoryData'
-  ############# Parameters for SSM AWS-ApplyChefRecipes Document required for State Manager Association
+  #-------------------------------------------------
+  # Parameters for SSM AWS-ApplyChefRecipes Document required for State Manager Association
+  #-------------------------------------------------
   ChefSourceType:
     Type: String
     Default: S3
@@ -100,7 +184,7 @@ Parameters :
     Description: >-
       (Required) The Chef recipes to apply. For example,
       recipe[cookbook_name1::recipe_name],recipe[cookbook_name2::recipe_name]
-  ChefJSONAttributes:
+  ChefJSONOptions:
     Type: String
     Default: " "
     Description: >-
@@ -159,11 +243,13 @@ Parameters :
       (Optional) The compliance type that you want reported in compliance results.
   ChefComplianceRepBucket:
     Type: String
-    AllowedPattern: '^[^''";&\|><\*\?`\$\(\)\{\}\[\]!#\\]*$'
+    Default: 'chef-compliance-report-af-south-1-{CentralAWSAccountId}'
     Description: >-
       (Optional) Enter the name of the Chef compliance bucket created using 1_opsmgmt-chef-central-account.yaml. 
       The name of an existing Amazon S3 bucket in which to store details about every Chef run executed by this document, including resource configuration and compliance results.
-###### Chef RunInspec parameters
+#-------------------------------------------------
+# Chef RunInspec parameters
+#-------------------------------------------------
   RunInspecSourceType:
     Type: String
     Default: GitHub
@@ -185,8 +271,7 @@ Parameters :
       {"path":"https://chef-repo-us-east-1-123456789012.s3.eu-west-1.amazonaws.com/ntp-3.12.0.tar.gz"}
       Example GitHub parameters (sample includes GitHub token passed in as SSM Parameter Store value, replace with your own SSM Paramter when using a private repo):
       {"owner":"awslabs","repository":"amazon-ssm","path":"Compliance/InSpec/PortCheck","getOptions":"branch:master","tokenInfo": "{{ssm-secure:mySecureStringParameter}}"}.
-####### end of RunInspec parameters
-    
+   
 Conditions:
   CreateAutomationExecutionRoleCondition:
     Fn::Equals:
@@ -332,7 +417,7 @@ Resources:
         RunList: 
           - !Ref ChefRunList
         JsonAttributesContent: 
-          - !Ref ChefJSONAttributes
+          - !Ref ChefJSONOptions
         ChefClientVersion: 
           - !Ref ChefClientVer
         ChefClientArguments: 
@@ -346,7 +431,6 @@ Resources:
         ComplianceReportBucket: 
           - !Ref ChefComplianceRepBucket
         
-
   #-------------------------------------------------
   # Resource Data Sync to aggregate inventory, patching, and compliance data in the central S3 bucket
   #-------------------------------------------------

@@ -236,7 +236,7 @@ Resources:
   ChefComplianceReportBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub 'chef-compliance-logs-${AWS::Region}-${AWS::AccountId}'
+      BucketName: !Sub 'chef-compliance-report-${AWS::Region}-${AWS::AccountId}'
       AccessControl: BucketOwnerFullControl
       VersioningConfiguration:
         Status: Enabled
@@ -327,10 +327,10 @@ Resources:
   # Automation Administration role for multi-account/Region Automation capabilities
   #
   #-------------------------------------------------
-  AutomationAdministrationServiceRole:
+  Bounded-AutomationAdministrationServiceRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: AWS-SystemsManager-AutomationAdministrationRole
+      RoleName: Bounded-AWS-SystemsManager-AutomationAdministrationRole
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -590,7 +590,7 @@ Resources:
     Properties: 
       Database: !Join [ '-', [!Ref ResouceSyncBucket, 'database'] ]
       Description: Example query to list managed instances that are non-compliant for Chef configuration.
-      Name: QueryNonCompliantChef
+      Name: QueryNonCompliantChefInSpec
       QueryString: |
         SELECT 
           * 

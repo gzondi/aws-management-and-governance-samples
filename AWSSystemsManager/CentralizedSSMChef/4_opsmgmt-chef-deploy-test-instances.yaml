@@ -36,10 +36,11 @@ Parameters :
     Description: 'Name of the execution logs S3 bucket that lives in the central account.'
   ChefRepoS3Bucket :
     Type : 'String'
-    Description: 'Name of the Chef Recipe S3 bucket that lives in the central account.'
+    Description: '(Optional) Name of the Chef Recipe S3 bucket that lives in the central account.'
   ChefComplianceRepS3Bucket :
     Type : 'String'
-    Description: 'Name of the Chef compliance logs S3 bucket that lives in the central account.'
+    Default: !Sub 'chef-compliance-report-${AWS::Region}-${AWS::AccountId}'
+    Description: 'Name of the Chef compliance report S3 bucket that lives in the central account.'
   ExistingManagedInstanceProfile : 
     Type : 'String'
     Description : "(Optional) The name of the IAM Instance Profile that grants permissions to AWS Systems Manager."
@@ -76,9 +77,9 @@ Resources:
            - "AWS::AllSupported"
           TagFilters:
             -
-              Key: "Patch"
+              Key: "ChefGroup"
               Values: 
-                - "True"
+                - "CustomAmazonLinux"
 
   #-------------------------------------------------
   # IAM role and instance profile to enable Systems Manager registration on EC2 instances
@@ -247,29 +248,33 @@ Resources:
           Value: AmazonLinux
         - Key: Chef
           Value: 'True'
-        - Key: 'Chef Group'
+        - Key: 'ChefGroup'
           Value: 'CustomAmazonLinux'
-  WindowsEc2Instance: 
-    Type: AWS::EC2::Instance
-    Properties: 
-      InstanceType: t3.small
-      ImageId: !Ref LatestWindowsAmiId
-      NetworkInterfaces: 
-        - AssociatePublicIpAddress: "true"
-          DeviceIndex: "0"
-          GroupSet: 
-            - Ref: "InstanceSecurityGroup"
-          SubnetId: 
-            Ref: "SubnetPublic"
-      IamInstanceProfile: 
-         Fn::If:
-          - CreateManagedInstanceProfileCondition
-          - !Ref ManagedInstanceProfile
-          - !Ref ExistingManagedInstanceProfile
-      Tags:
-        - Key: Name
-          Value: Windows
-        - Key: Chef
-          Value: 'True'
-        - Key: 'Chef Group'
-          Value: 'CustomWindows'
+  #-------------------------------------------------
+  # Windows Instance is commented out as SSM AWS-ApplyChefRecipes document does not support Windows instances
+  #-------------------------------------------------
+  
+  # WindowsEc2Instance: 
+  #   Type: AWS::EC2::Instance
+  #   Properties: 
+  #     InstanceType: t3.small
+  #     ImageId: !Ref LatestWindowsAmiId
+  #     NetworkInterfaces: 
+  #       - AssociatePublicIpAddress: "true"
+  #         DeviceIndex: "0"
+  #         GroupSet: 
+  #           - Ref: "InstanceSecurityGroup"
+  #         SubnetId: 
+  #           Ref: "SubnetPublic"
+  #     IamInstanceProfile: 
+  #        Fn::If:
+  #         - CreateManagedInstanceProfileCondition
+  #         - !Ref ManagedInstanceProfile
+  #         - !Ref ExistingManagedInstanceProfile
+  #     Tags:
+  #       - Key: Name
+  #         Value: Windows
+  #       - Key: Chef
+  #         Value: 'True'
+  #       - Key: 'Chef Group'
+  #         Value: 'CustomWindows'
