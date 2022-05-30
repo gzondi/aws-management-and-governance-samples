@@ -349,7 +349,7 @@ Resources:
             Action:
             - sts:AssumeRole
             Resource:
-              Fn::Sub: arn:${AWS::Partition}:iam::*:role/AWS-SystemsManager-AutomationExecutionRole
+              Fn::Sub: arn:${AWS::Partition}:iam::*:role/Bounded-AWS-SystemsManager-AutomationExecutionRole
           - Effect: Allow
             Action:
             - organizations:ListAccountsForParent

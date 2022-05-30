@@ -334,7 +334,7 @@ Resources:
             Action: 
               - iam:PassRole
             Resource:
-              - Fn::Sub: arn:${AWS::Partition}:iam::${AWS::AccountId}:role/AWS-SystemsManager-AutomationAdministrationRole
+              - Fn::Sub: arn:${AWS::Partition}:iam::${AWS::AccountId}:role/Bounded-AWS-SystemsManager-AutomationAdministrationRole
           - Effect: Allow
             Action:
               - logs:CreateLogStream
@@ -388,7 +388,7 @@ Resources:
                   DocumentName=f'{AutomationDocumentMamrAWSApplyChefRecipes}',
                   
                   Parameters={
-                      'AutomationAssumeRole':[f'arn:aws:iam::{MasterAccountID}:role/AWS-SystemsManager-AutomationAdministrationRole'] ,
+                      'AutomationAssumeRole':[f'arn:aws:iam::{MasterAccountID}:role/Bounded-AWS-SystemsManager-AutomationAdministrationRole'] ,
                       'SourceType' : [f'{ChefSourceType}'] ,
                       'SourceInfo' : [f'{ChefSourceInfo}'] ,
                       'RunList' : [f'{ChefRunList}'] ,
@@ -415,7 +415,7 @@ Resources:
                   DocumentName=f'{AutomationDocumentMamrAWSApplyChefRecipes}',
                   
                   Parameters={
-                      'AutomationAssumeRole':[f'arn:aws:iam::{MasterAccountID}:role/AWS-SystemsManager-AutomationAdministrationRole'] ,
+                      'AutomationAssumeRole':[f'arn:aws:iam::{MasterAccountID}:role/Bounded-AWS-SystemsManager-AutomationAdministrationRole'] ,
                       'SourceType' : [f'{ChefSourceType}'] ,
                       'SourceInfo' : [f'{ChefSourceInfo}'] ,
                       'RunList' : [f'{ChefRunList}'] ,
@@ -441,7 +441,7 @@ Resources:
                   DocumentName=f'{AutomationDocumentMamrAWSApplyChefRecipes}',
                   
                   Parameters={
-                      'AutomationAssumeRole':[f'arn:aws:iam::{MasterAccountID}:role/AWS-SystemsManager-AutomationAdministrationRole'] ,
+                      'AutomationAssumeRole':[f'arn:aws:iam::{MasterAccountID}:role/Bounded-AWS-SystemsManager-AutomationAdministrationRole'] ,
                       'SourceType' : [f'{ChefSourceType}'] ,
                       'SourceInfo' : [f'{ChefSourceInfo}'] ,
                       'RunList' : [f'{ChefRunList}'] ,
@@ -467,7 +467,7 @@ Resources:
                   DocumentName=f'{AutomationDocumentMamrAWSApplyChefRecipes}',
                   
                   Parameters={
-                      'AutomationAssumeRole':[f'arn:aws:iam::{MasterAccountID}:role/AWS-SystemsManager-AutomationAdministrationRole'] ,
+                      'AutomationAssumeRole':[f'arn:aws:iam::{MasterAccountID}:role/Bounded-AWS-SystemsManager-AutomationAdministrationRole'] ,
                       'SourceType' : [f'{ChefSourceType}'] ,
                       'SourceInfo' : [f'{ChefSourceInfo}'] ,
                       'RunList' : [f'{ChefRunList}'] ,
