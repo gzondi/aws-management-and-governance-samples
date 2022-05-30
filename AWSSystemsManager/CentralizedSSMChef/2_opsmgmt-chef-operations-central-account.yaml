@@ -126,7 +126,7 @@ Parameters :
       Enter the name of the execution logs bucket created using opsmgmt-central-account.yaml.
   ExecutionRoleName:
     Type: String
-    Default: AWS-SystemsManager-AutomationExecutionRole
+    Default: Bounded-AWS-SystemsManager-AutomationAdministrationRole
     Description: >-
       The Automation execution role to be assumed in target accounts during multi-account and multi-Region Automation patching operations.
   MaximumConcurrency:

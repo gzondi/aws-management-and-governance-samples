@@ -327,7 +327,7 @@ Resources:
   # Automation Administration role for multi-account/Region Automation capabilities
   #
   #-------------------------------------------------
-  Bounded-AutomationAdministrationServiceRole:
+  BoundedAutomationAdministrationServiceRole:
     Type: AWS::IAM::Role
     Properties:
       RoleName: Bounded-AWS-SystemsManager-AutomationAdministrationRole
